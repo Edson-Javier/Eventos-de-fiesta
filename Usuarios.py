@@ -263,11 +263,29 @@ def iniciar_usuarios():
 	frame_tabla_usuario.rowconfigure(0, weight=1)
 	frame_tabla_usuario.columnconfigure(0, weight=1)
 
+	def insertar_datos_a_entradas(event):
+		seleccionado = tree.selection()  # Obtener el elemento seleccionado
+		if seleccionado:
+			Desbloquear_buscar()
+			item = tree.item(seleccionado)
+			valores = item['values']
+			# Insertar los datos en los cuadros de entrada
+			
+			txIdUsuario.insert(0, valores[0])
+			txNombreUsuario.insert(0, valores[1])
+			txUser_name.insert(0, valores[2])
+			txContraseñaUsuario.insert(0, valores[3])
+			txPerfilUsuario.insert(0, valores[4])
+			Bloquear_buscar()
+			messagebox.showinfo("Éxito", "Usuario seleccionado.\nPuede editar o eliminar el cliente.")
+	# Vincular el evento de selección del Treeview a la función
+	tree.bind("<<TreeviewSelect>>", insertar_datos_a_entradas)
+
 	# Panel principal
 	Usuarios.columnconfigure(0, weight=1)
 	Usuarios.columnconfigure(1, weight=1)
 	Usuarios.columnconfigure(2, weight=1)
-	Usuarios.rowconfigure(7, weight=1)
+	Usuarios.rowconfigure(3, weight=1)
 
 	# Panel de búsqueda de usuario
 	frame_buscar_usuario = tk.Frame(Usuarios)

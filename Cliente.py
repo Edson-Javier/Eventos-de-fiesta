@@ -243,12 +243,34 @@ def iniciar_Clientes():
 	# Configurar expansión del Treeview
 	frame_tabla_clientes.rowconfigure(0, weight=1)
 	frame_tabla_clientes.columnconfigure(0, weight=1)
+# Función para insertar datos seleccionados en los cuadros de entrada
+	def insertar_datos_a_entradas(event):
+		seleccionado = tree.selection()  # Obtener el elemento seleccionado
+		if seleccionado:
+			Desbloquear_buscar()
+			item = tree.item(seleccionado)
+			valores = item['values']
+			# Insertar los datos en los cuadros de entrada
+			
+			txIdCliente.insert(0, valores[0])
+			txNombreCliente.insert(0, valores[1])
+			txEdad.insert(0, valores[2])
+			txTelefono.insert(0, valores[3])
+			txEmail.insert(0, valores[4])
+			txContraseña.insert(0, valores[5])
+			Bloquear_buscar()
+			messagebox.showinfo("Éxito", "Cliente seleccionado.\nPuede editar o eliminar el cliente.")
+	
+	# Vincular el evento de selección del Treeview a la función
+	tree.bind("<<TreeviewSelect>>", insertar_datos_a_entradas)
+
 
 	# Panel principal
+# Configura el Armar_venta para permitir la expansión de la tabla
 	Clientes.columnconfigure(0, weight=1)
 	Clientes.columnconfigure(1, weight=1)
 	Clientes.columnconfigure(2, weight=1)
-	Clientes.rowconfigure(7, weight=1)
+	Clientes.rowconfigure(3, weight=1)
 
 	# Panel de búsqueda de usuario
 	frame_buscar_cliente = tk.Frame(Clientes)

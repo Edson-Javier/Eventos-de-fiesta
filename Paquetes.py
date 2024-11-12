@@ -324,6 +324,25 @@ def iniciar_Paquetes():
 	frame_treeview.rowconfigure(0, weight=1)
 	frame_treeview.columnconfigure(0, weight=1)
 
+
+	def insertar_datos_a_entradas(event):
+		seleccionado = tree.selection()  # Obtener el elemento seleccionado
+		if seleccionado:
+			Desbloquear_buscar()
+			item = tree.item(seleccionado)
+			valores = item['values']
+			# Insertar los datos en los cuadros de entrada
+			
+			txID.insert(0, valores[0])
+			txTipo.insert(0, valores[1])
+			txDescripcion.insert(0, valores[2])
+			txPrecio.insert(0, valores[3])
+			Bloquear_buscar()
+			messagebox.showinfo("Éxito", "Paquete seleccionado.\nPuede editar o eliminar el cliente.")
+	# Vincular el evento de selección del Treeview a la función
+	tree.bind("<<TreeviewSelect>>", insertar_datos_a_entradas)
+
+
 	# Cargar los datos en el Treeview
 	actualizar_combobox_tipos()
 	cargar_datos(tree)

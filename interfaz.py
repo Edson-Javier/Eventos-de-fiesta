@@ -6,12 +6,9 @@ import Cliente as cliente
 import Armar_venta as armar
 import Paquetes as pack
 
-Ancho = 700  # Puedes ajustar estos valores
-Largo = 500
-
 def iniciar_interfaz():
 	Menu = tk.Tk()
-	Menu.config(width=Ancho, height=Largo)
+	Menu.geometry("800x600")
 	Menu.title("Menu")
 
 	def fin_interfaz():
@@ -45,18 +42,25 @@ def iniciar_interfaz():
 			btn_Usuarios.config(state= 'disabled')
 	"""
 
+	Menu.columnconfigure(0, weight=1)
+	Menu.columnconfigure(1, weight=1)
+	Menu.columnconfigure(2, weight=1)
+	Menu.rowconfigure(10, weight=1)
+
+	# Panel de búsqueda de usuario
+
 	btn_Productos = tk.Button(Menu,text="Paquetes",command = inicio_paquetes)
-	btn_Productos.place(x=10,y=30)
+	btn_Productos.grid(row=0, column=0, padx=5, pady=5, sticky="w")
 
 	btn_Usuarios = tk.Button(Menu,text="Usuarios",command = inicio_users)
-	btn_Usuarios.place(x=10,y=80)
+	btn_Usuarios.grid(row=1, column=0, padx=5, pady=5, sticky="w")
 
 	btn_Clientes = tk.Button(Menu,text="Clientes",command = inicio_clientes)
-	btn_Clientes.place(x=10,y=130)
+	btn_Clientes.grid(row=3, column=0, padx=5, pady=5, sticky="w")
 
-	btn_Armar = tk.Button(Menu,text="Armar\nventa",command = inicio_armar)
-	btn_Armar.place(x=10,y=180)
+	btn_Armar = tk.Button(Menu,text="Venta",command = inicio_armar)
+	btn_Armar.grid(row=4, column=0, padx=5, pady=5, sticky="w")
 
 
 	btn_Salir = tk.Button(Menu, text = "Salir", command = fin_interfaz)
-	btn_Salir.place(x=10,y=280)
+	btn_Salir.grid(row=6, column=0, padx=5, pady=5, sticky="w")
