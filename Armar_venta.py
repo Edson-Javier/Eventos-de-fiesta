@@ -5,14 +5,19 @@ import Main as ini
 import interfaz as intfz
 import Login as lg 
 
-
 global_paquetes = None
-Id_venta = None
 
 def iniciar_Armar_venta():
 	Armar_venta = tk.Tk()
-	Armar_venta.geometry("800x600")
-	Armar_venta.title("Gestion de venta")
+	Armar_venta.geometry(f"{Armar_venta.winfo_screenwidth()}x{Armar_venta.winfo_screenheight()}")  # Ajusta al tamaño de la pantalla
+	Armar_venta.title("Gestión de Venta")
+
+	def Autorizacion(Estado):
+		if Estado == 'Confirmado':
+			btn_Nuevo.config(state = 'disabled')
+			txNombreUsuario.config(state = 'readonly')
+			txAbonado.config(state = 'readonly')
+			txEstado.config(state = 'readonly') 
 
 	def deshabilitar_componentes():
 		txBuscarId.delete(0, tk.END)
@@ -29,8 +34,6 @@ def iniciar_Armar_venta():
 		txNombreUsuario.delete(0,tk.END)
 		txNombreUsuario.insert(0, lg.global_logeado.getNombre())
 		txNombreUsuario.config(state= 'readonly')
-		btn_Nuevo.config(state='disabled')
-		btn_Salvar.config(state='normal')
 
 	def Desbloqueo():
 		txID.config(state = 'normal')
@@ -40,9 +43,8 @@ def iniciar_Armar_venta():
 		txFecha_entrega.config(state = 'normal')  
 		txTotal.config(state = 'normal')
 		txAbonado.config(state = 'normal')
+		txEstado.config(state = 'normal')
 		deshabilitar_componentes()
-		btn_Nuevo.config(state='normal')
-		btn_Salvar.config(state = 'disabled')
 
 
 	def buscar_dato(tabla, campo_busqueda, valor_busqueda, campo_resultado):
@@ -96,7 +98,8 @@ def iniciar_Armar_venta():
 				conn.commit()
 
 				if cursor.rowcount > 0:  # Si se actualizó algún registro
-					Desbloqueo()
+					Cancelar()
+					cargar_datos(tree)
 					messagebox.showinfo("Exito", "La tabla venta ha sido actualizada correctamente.")
 
 			except sqlite3.IntegrityError:
@@ -125,8 +128,6 @@ def iniciar_Armar_venta():
 
 	def Buscar():
 		try:
-			global global_paquetes
-			global Id_venta
 			venta = txBuscarId.get()
 			
 			if not venta:
@@ -152,6 +153,8 @@ def iniciar_Armar_venta():
 				txTotal.insert(0,resultado[6])
 				txAbonado.insert(0, resultado[7])
 				txEstado.insert(0, resultado[8])
+				Autorizacion(resultado[8])
+				cargar_datos_paquetes(tree_derecha,global_paquetes)
 				Bloquear_buscar()
 				messagebox.showinfo("Éxito", "Venta encontrada.")
 			else:
@@ -163,41 +166,83 @@ def iniciar_Armar_venta():
 			messagebox.showerror("Error", f"Ha ocurrido un error al buscar la venta: {str(e)}")
 		finally:
 			conn.close()
-	"""
+	
 	def Eliminar():
 		try:
 			
-			# Obtener el ID del usuario a eliminar
-			Id = txIdCliente.get()  # Solo se utiliza para identificar al usuario
+			Venta = txID.get()
+			Cliente = txNombreCliente.get()
+
+			if not Venta or not Cliente:
+				messagebox.showwarning("Advertencia", "Selecciona una venta primero.")
+				return
 
 			conn, cursor = ini.obtener_conexion()
 
 			try:
 				# Confirmar la eliminación del usuario
-				respuesta = messagebox.askyesno("Confirmación", f"¿Estás seguro de que deseas eliminar al cliente con ID : {Id}?")
+				respuesta = messagebox.askyesno("Confirmación", f"¿Estás seguro de que deseas eliminar la venta del cliente : {Cliente}?\nSi tiene un equipo armado tambien lo eliminara.")
 
 				if respuesta:  # Si el usuario confirma
-					cursor.execute("DELETE FROM Armar_venta WHERE ID_Cliente = ?", (Id,))
+					cursor.execute("DELETE FROM Armar_venta WHERE ID = ?", (Venta,))
+					cursor.execute("DELETE FROM Equipos WHERE ID_venta = ?", (Venta,))
 					conn.commit()
 
 					if cursor.rowcount > 0:  # Si se eliminó algún registro
-						messagebox.showinfo("Exito", f"Cliente con ID {Id} ha sido eliminado correctamente.")
-						Desbloquear_buscar()  # Limpiar las cajas de texto o reiniciar el formulario
+						messagebox.showinfo("Exito", "La venta y el equipo se elimninaron correctamente.")
+						cargar_datos(tree)
+						Cancelar()  # Limpiar las cajas de texto o reiniciar el formulario
 
 			except Exception as e:
-				Desbloquear_buscar()
+				Cancelar()
 				messagebox.showerror("Error", f"Ha ocurrido un error: {str(e)}")
 		finally:
 			conn.close()
-		"""
+		
 	def Cancelar():
+		Desbloqueo()
+		for item in tree_derecha.get_children():
+			tree_derecha.delete(item)
+
+	def Salir():
 		Armar_venta.destroy()
 		intfz.iniciar_interfaz()
 
 
+	def cargar_datos_paquetes(tree_derecha, paquetes_ids_str):
+			# Obtener la conexión y el cursor
+			conn, cursor = ini.obtener_conexion()
+			try:
+				# Limpiar el árbol antes de cargar los nuevos datos
+				for item in tree_derecha.get_children():
+					tree_derecha.delete(item)
+
+				# Convertir el string de IDs a una lista
+				paquetes_ids = paquetes_ids_str.split()  # Divide por espacios, genera una lista de strings
+				paquetes_ids = [int(id_) for id_ in paquetes_ids]  # Convertir a enteros
+
+				# Crear la consulta dinámica para múltiples IDs
+				placeholders = ",".join("?" for _ in paquetes_ids)  # Crear un "?, ?, ?" dinámico
+				query = f"SELECT ID, Tipo, Descripcion, Precio FROM Paquetes WHERE ID IN ({placeholders})"
+
+				# Ejecutar la consulta con la lista de IDs
+				cursor.execute(query, paquetes_ids)
+				resultados = cursor.fetchall()
+
+				# Insertar los resultados en el Treeview
+				for fila in resultados:
+					tree_derecha.insert("", "end", values=fila)
+			except Exception as e:
+				print(f"Error al cargar datos: {e}")
+			finally:
+				# Cerrar el cursor y la conexión
+				cursor.close()
+				conn.close()
+
 	# Función para cargar los datos en el Treeview
 	def cargar_datos(tree):
 		# Obtener la conexión y el cursor
+		global global_paquetes
 		conn, cursor = ini.obtener_conexion()
 		try:
 			# Limpiar el árbol antes de cargar los nuevos datos
@@ -217,9 +262,9 @@ def iniciar_Armar_venta():
 					valores[1] = buscar_dato("usuarios", "ID", valores[1], "Nombre")
 				if len(valores) > 2:
 					valores[2] = buscar_dato("clientes", "ID", valores[2], "Nombre")
-				if len(valores) > 5:
-					valores[5] = len(valores[5])  # Reemplazar con la longitud de `valores[4]`
-				
+				if len(valores) > 5: 
+					global_paquetes = valores[5]
+					valores[5] = len(valores[5].replace(" ", ""))
 				# Insertar los datos en el árbol
 				tree.insert("", "end", values=valores)
 		except Exception as e:
@@ -228,6 +273,8 @@ def iniciar_Armar_venta():
 			# Cerrar el cursor y la conexión
 			cursor.close()
 			conn.close()
+
+
 
 	# Función para insertar datos en los cuadros de entrada
 	def insertar_datos_a_entradas(event):
@@ -244,18 +291,63 @@ def iniciar_Armar_venta():
 			txTotal.insert(0, valores[6])
 			txAbonado.insert(0, valores[7])
 			txEstado.set(valores[8])
+			cargar_datos_paquetes(tree_derecha,global_paquetes)
 			messagebox.showinfo("Éxito", "Usuario seleccionado.\nPuede editar o eliminar el cliente.")
+			Autorizacion(valores[8])
 			Bloquear_buscar()
 
-	# Frame que contiene la tabla
+
+
+	# Panel de búsqueda de usuario
+	frame_buscar = tk.Frame(Armar_venta)
+	frame_buscar.grid(row=0, column=0, columnspan=3, pady=10, padx=10, sticky="ew")
+
+	# Panel de información del usuario
+	frame_info = tk.Frame(Armar_venta)
+	frame_info.grid(row=1, column=0, columnspan=2, pady=10, padx=10, sticky="nsew")
+
+	# Nuevo Frame para la tabla en el lado superior derecho
+	frame_tabla_derecha = tk.Frame(Armar_venta)
+	frame_tabla_derecha.grid(row=1, column=2, pady=10, padx=10, sticky="nsew")
+
+	# Panel de botones de acción
+	frame_botones = tk.Frame(Armar_venta)
+	frame_botones.grid(row=2, column=0, columnspan=3, pady=10, padx=10, sticky="ew")
+
+	# Tabla en el lado superior derecho
+	tree_derecha = ttk.Treeview(
+		frame_tabla_derecha,
+		columns=("ID", "Tipo", "Descripcion", "Precio"),
+		show="headings"
+	)
+	tree_derecha.grid(row=0, column=0, sticky="nsew")
+
+	# Encabezados de la tabla derecha
+	tree_derecha.heading("ID", text="ID")
+	tree_derecha.heading("Tipo", text="Tipo")
+	tree_derecha.heading("Descripcion", text="Descripción")
+	tree_derecha.heading("Precio", text="Precio")
+
+	# Configurar ancho de columnas
+	tree_derecha.column("ID", width=150)
+	tree_derecha.column("Tipo", width=150)
+	tree_derecha.column("Descripcion", width=200)
+	tree_derecha.column("Precio", width=150)
+
+	# Scrollbar para la tabla derecha
+	scrollbar_derecha = ttk.Scrollbar(frame_tabla_derecha, orient="vertical", command=tree_derecha.yview)
+	tree_derecha.configure(yscroll=scrollbar_derecha.set)
+	scrollbar_derecha.grid(row=0, column=1, sticky="ns")
+
+	# Frame para la tabla principal
 	frame_tabla = tk.Frame(Armar_venta)
 	frame_tabla.grid(row=3, column=0, columnspan=3, pady=10, padx=10, sticky="nsew")
 
 	# Configura el frame_tabla para expandirse
-	frame_tabla.columnconfigure(0, weight=1)
 	frame_tabla.rowconfigure(0, weight=1)
+	frame_tabla.columnconfigure(0, weight=1)
 
-	# Treeview para mostrar los datos
+	# Tabla principal
 	tree = ttk.Treeview(
 		frame_tabla,
 		columns=("ID", "Usuario", "Cliente", "Fecha_pedido", "Fecha_entrega", "Paquetes", "Total", "Abonado", "Estado"),
@@ -263,7 +355,7 @@ def iniciar_Armar_venta():
 	)
 	tree.grid(row=0, column=0, sticky="nsew")
 
-	# Definir encabezados de las columnas
+	# Encabezados de la tabla principal
 	tree.heading("ID", text="ID")
 	tree.heading("Usuario", text="Usuario")
 	tree.heading("Cliente", text="Cliente")
@@ -285,86 +377,77 @@ def iniciar_Armar_venta():
 	tree.column("Abonado", width=70)
 	tree.column("Estado", width=100)
 
-	# Scrollbar para el Treeview
+	# Scrollbar para el Treeview principal
 	scrollbar = ttk.Scrollbar(frame_tabla, orient="vertical", command=tree.yview)
 	tree.configure(yscroll=scrollbar.set)
 	scrollbar.grid(row=0, column=1, sticky="ns")
-	
-	# Configura el Armar_venta para permitir la expansión de las tablas
-	Armar_venta.columnconfigure(0, weight=1)
-	Armar_venta.columnconfigure(1, weight=1)
-	Armar_venta.columnconfigure(2, weight=1)
-	Armar_venta.rowconfigure(3, weight=1)
 
+	# Configura la ventana principal para que todo se distribuya correctamente
+	Armar_venta.columnconfigure(0, weight=2)  # Columna de los frames de entrada
+	Armar_venta.columnconfigure(1, weight=1)  # Espacio entre entrada y tabla derecha
+	Armar_venta.columnconfigure(2, weight=2)  # Columna de la tabla derecha
+	Armar_venta.rowconfigure(1, weight=1)     # Fila que contiene frame_info y tabla derecha
+	Armar_venta.rowconfigure(3, weight=2)     # Fila de la tabla principal
 
-	# Panel de búsqueda de usuario
-	frame_buscar = tk.Frame(Armar_venta)
-	frame_buscar.grid(row=0, column=0, columnspan=3, pady=10, padx=10, sticky="ew")
-
-	frame_info = tk.Frame(Armar_venta)
-	frame_info.grid(row=1, column=0, columnspan=3, pady=10, padx=10, sticky="ew")
-
-	frame_botones = tk.Frame(Armar_venta)
-	frame_botones.grid(row=2, column=0, columnspan=3, pady=10, padx=10, sticky="ew")
-	
+	# Widgets del frame_buscar
 	tk.Label(frame_buscar, text="Buscar ID:").grid(row=0, column=0, padx=5, pady=5, sticky="ew")
-	txBuscarId = tk.Entry(frame_buscar, width=10)
+	txBuscarId = tk.Entry(frame_buscar, width=30)
 	txBuscarId.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
 
-	btn_Buscar = tk.Button(frame_buscar, text="Buscar", command=Buscar)
+	btn_Buscar = tk.Button(frame_buscar, text="Buscar", command = Buscar)
 	btn_Buscar.grid(row=0, column=2, padx=5, pady=5, sticky="ew")
 
-	# Panel de información del usuario
-
+	# Widgets del frame_info
 	tk.Label(frame_info, text="ID:").grid(row=1, column=0, padx=5, pady=5, sticky="ew")
-	txID = tk.Entry(frame_info, width=10)
+	txID = tk.Entry(frame_info, width=30)
 	txID.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
 
 	tk.Label(frame_info, text="Usuario:").grid(row=2, column=0, padx=5, pady=5, sticky="ew")
-	txNombreUsuario = tk.Entry(frame_info, width=20)
+	txNombreUsuario = tk.Entry(frame_info, width=30)
 	txNombreUsuario.grid(row=2, column=1, padx=5, pady=5, sticky="ew")
 
 	tk.Label(frame_info, text="Cliente:").grid(row=3, column=0, padx=5, pady=5, sticky="ew")
-	txNombreCliente = tk.Entry(frame_info, width=20)
+	txNombreCliente = tk.Entry(frame_info, width=30)
 	txNombreCliente.grid(row=3, column=1, padx=5, pady=5, sticky="ew")
 
 	tk.Label(frame_info, text="Registro:").grid(row=4, column=0, padx=5, pady=5, sticky="ew")
-	txFecha_pedido = tk.Entry(frame_info, width=20)
+	txFecha_pedido = tk.Entry(frame_info, width=30)
 	txFecha_pedido.grid(row=4, column=1, padx=5, pady=5, sticky="ew")
 
 	tk.Label(frame_info, text="Entrega:").grid(row=5, column=0, padx=5, pady=5, sticky="ew")
-	txFecha_entrega = tk.Entry(frame_info, width=20)
+	txFecha_entrega = tk.Entry(frame_info, width=30)
 	txFecha_entrega.grid(row=5, column=1, padx=5, pady=5, sticky="ew")
 
 	tk.Label(frame_info, text="Total:").grid(row=6, column=0, padx=5, pady=5, sticky="ew")
-	txTotal = tk.Entry(frame_info, width=20)
+	txTotal = tk.Entry(frame_info, width=30)
 	txTotal.grid(row=6, column=1, padx=5, pady=5, sticky="ew")
 
 	tk.Label(frame_info, text="Abonado:").grid(row=7, column=0, padx=5, pady=5, sticky="ew")
-	txAbonado = tk.Entry(frame_info, width=20)
+	txAbonado = tk.Entry(frame_info, width=30)
 	txAbonado.grid(row=7, column=1, padx=5, pady=5, sticky="ew")
 
 	tk.Label(frame_info, text="Estado:").grid(row=8, column=0, padx=5, pady=5, sticky="ew")
-	txEstado = ttk.Combobox(frame_info, values=["Confirmado"])
+	txEstado = ttk.Combobox(frame_info, values=["Confirmado"], width=30)
 	txEstado.grid(row=8, column=1, padx=5, pady=5, sticky="ew")
 
-	# Panel de botones de acción
-
-	btn_Nuevo = tk.Button(frame_botones, text="Autorizar", command=Nuevo)
+	# Botones del frame_botones
+	btn_Nuevo = tk.Button(frame_botones, text="Autorizar", command = Nuevo)
 	btn_Nuevo.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
 
-	btn_Salvar = tk.Button(frame_botones, text="Salvar", command=Salvar)
+	btn_Salvar = tk.Button(frame_botones, text="Salvar", command = Salvar)
 	btn_Salvar.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
-	btn_Salvar.config(state='disabled')
 
-	btn_Cancelar = tk.Button(frame_botones, text="Cancelar", command=Cancelar)
-	btn_Cancelar.grid(row=0, column=2, padx=5, pady=5, sticky="ew")
+	btn_Eliminar = tk.Button(frame_botones, text="Eliminar", command = Eliminar)
+	btn_Eliminar.grid(row=0, column=2, padx=5, pady=5, sticky="ew")
 
-
+	btn_Cancelar = tk.Button(frame_botones, text="Cancelar", command = Cancelar)
+	btn_Cancelar.grid(row=0, column=3, padx=5, pady=5, sticky="ew")
+	
+	btn_Salir = tk.Button(frame_botones, text="Salir", command = Salir)
+	btn_Salir.grid(row=0, column=4, padx=5, pady=5, sticky="ew")
 
 	# Vincular evento de selección del Treeview a la función
 	tree.bind("<<TreeviewSelect>>", insertar_datos_a_entradas)
 
 	# Cargar datos al iniciar
 	cargar_datos(tree)
-

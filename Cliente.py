@@ -7,7 +7,7 @@ import Login as lg
 
 def iniciar_Clientes():
 	Clientes = tk.Tk()
-	Clientes.geometry("800x600")
+	Clientes.geometry(f"{Clientes.winfo_screenwidth()}x{Clientes.winfo_screenheight()}")  # Ajusta al tamaño de la pantalla
 	Clientes.title("Clientes")
 
 
@@ -188,6 +188,16 @@ def iniciar_Clientes():
 			conn.close()
 
 	def Cancelar():
+		txIdCliente.config(state = 'normal')
+		deshabilitar_componentes()
+		btn_Buscar.config(state = 'normal')
+		btn_Nuevo.config(state = 'normal')
+		btn_Salvar.config(state = 'disabled')
+		btn_Editar.config(state = 'disabled')
+		btn_Eliminar.config(state = 'disabled')
+
+
+	def Salir():
 		Clientes.destroy()
 		intfz.iniciar_interfaz()
 
@@ -338,5 +348,8 @@ def iniciar_Clientes():
 
 	btn_Cancelar = tk.Button(frame_botones_cliente, text="Cancelar", command=Cancelar)
 	btn_Cancelar.grid(row=0, column=4, padx=10, pady=5, sticky="ew")
+
+	btn_Salir = tk.Button(frame_botones_cliente, text="Salir", command=Salir)
+	btn_Salir.grid(row=0, column=5, padx=10, pady=5, sticky="ew")
 
 	cargar_datos(tree)

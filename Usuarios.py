@@ -6,7 +6,7 @@ import interfaz as intfz
 
 def iniciar_usuarios():
 	Usuarios = tk.Tk()
-	Usuarios.geometry("800x600") 
+	Usuarios.geometry(f"{Usuarios.winfo_screenwidth()}x{Usuarios.winfo_screenheight()}") 
 	Usuarios.title("Usuarios")
 
 	def deshabilitar_componentes_Usuario():
@@ -191,8 +191,17 @@ def iniciar_usuarios():
 			conn.close()
 
 
-	# Función para cancelar
 	def Cancelar():
+		txIdUsuario.config(state = 'normal')
+		deshabilitar_componentes_Usuario()
+		btn_Buscar_Usuario.config(state = 'normal')
+		btn_Nuevo_Usuario.config(state = 'normal')
+		btn_Salvar_Usuario.config(state = 'disabled')
+		btn_Editar_Usuario.config(state = 'disabled')
+		btn_Eliminar_Usuario.config(state = 'disabled')
+
+
+	def Salir():
 		Usuarios.destroy()
 		intfz.iniciar_interfaz()
 
@@ -349,5 +358,8 @@ def iniciar_usuarios():
 
 	btn_Cancelar = tk.Button(frame_botones_usuario, text="Cancelar", command=Cancelar)
 	btn_Cancelar.grid(row=0, column=4, padx=10, pady=5, sticky="ew")
+
+	btn_Salir = tk.Button(frame_botones_usuario, text="Salir", command=Salir)
+	btn_Salir.grid(row=0, column=5, padx=10, pady=5, sticky="ew")
 
 	cargar_datos(tree)

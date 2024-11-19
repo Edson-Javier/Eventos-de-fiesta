@@ -6,7 +6,7 @@ import interfaz as intfz
 
 def iniciar_Paquetes():
 	Paquetes = tk.Tk()
-	Paquetes.geometry("800x600")
+	Paquetes.geometry(f"{Paquetes.winfo_screenwidth()}x{Paquetes.winfo_screenheight()}")
 	Paquetes.title("Paquetes")
 
 	def deshabilitar_componentes():
@@ -186,10 +186,20 @@ def iniciar_Paquetes():
 			conn.close()
 
 
-	# Función para cancelar
 	def Cancelar():
+		txID.config(state = 'normal')
+		deshabilitar_componentes()
+		btn_Buscar.config(state='normal')
+		btn_Nuevo.config(state = 'normal')
+		btn_Salvar.config(state = 'disabled')
+		btn_Editar.config(state = 'disabled')
+		btn_Eliminar.config(state = 'disabled')
+
+
+	def Salir():
 		Paquetes.destroy()
 		intfz.iniciar_interfaz()
+
 
 	def obtener_tipos_unicos():
 		conn, cursor = ini.obtener_conexion()
@@ -298,6 +308,9 @@ def iniciar_Paquetes():
 
 	btn_Cancelar = tk.Button(frame_botones, text="Cancelar", command= Cancelar)
 	btn_Cancelar.grid(row=0, column=4, padx=10, pady=5, sticky="ew")
+
+	btn_Salir = tk.Button(frame_botones, text="Salir", command= Salir)
+	btn_Salir.grid(row=0, column=5, padx=10, pady=5, sticky="ew")
 
 	# Panel del Treeview para mostrar los paquetes
 	tree = ttk.Treeview(frame_treeview, columns=("ID", "Tipo", "Descripcion", "Precio"), show="headings")

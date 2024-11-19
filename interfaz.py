@@ -5,10 +5,11 @@ import Usuarios as usrs
 import Cliente as cliente
 import Armar_venta as armar
 import Paquetes as pack
+import Equipos as team
 
 def iniciar_interfaz():
 	Menu = tk.Tk()
-	Menu.geometry("800x600")
+	Menu.geometry(f"{Menu.winfo_screenwidth()}x{Menu.winfo_screenheight()}")
 	Menu.title("Menu")
 
 	def fin_interfaz():
@@ -33,7 +34,9 @@ def iniciar_interfaz():
 		Menu.destroy()
 		armar.iniciar_Armar_venta()
 	    
-
+	def inicio_equipos():
+		Menu.destroy()
+		team.iniciar_equipos()
 	"""
 	def verificacion():
 		resultado = lg.obtener_datos_usuario(user_name)
@@ -42,25 +45,29 @@ def iniciar_interfaz():
 			btn_Usuarios.config(state= 'disabled')
 	"""
 
-	Menu.columnconfigure(0, weight=1)
-	Menu.columnconfigure(1, weight=1)
-	Menu.columnconfigure(2, weight=1)
-	Menu.rowconfigure(10, weight=1)
+	# Configurar el frame del menú
+	Menu.columnconfigure(0, weight=1)  # Permitir expansión horizontal
 
-	# Panel de búsqueda de usuario
+	# Estilo de los botones
+	button_font = ("Arial", 14, "bold")  # Fuente grande y negrita
+	button_width = 15  # Ancho de los botones
+	button_padding = {"padx": 20, "pady": 10}  # Espaciado alrededor de los botones
 
-	btn_Productos = tk.Button(Menu,text="Paquetes",command = inicio_paquetes)
-	btn_Productos.grid(row=0, column=0, padx=5, pady=5, sticky="w")
+	# Botones del menú
+	btn_Productos = tk.Button(Menu, text="Paquetes", command=inicio_paquetes, font=button_font, width=button_width)
+	btn_Productos.grid(row=0, column=0, **button_padding, sticky="ew")
 
-	btn_Usuarios = tk.Button(Menu,text="Usuarios",command = inicio_users)
-	btn_Usuarios.grid(row=1, column=0, padx=5, pady=5, sticky="w")
+	btn_Usuarios = tk.Button(Menu, text="Usuarios", command=inicio_users, font=button_font, width=button_width)
+	btn_Usuarios.grid(row=1, column=0, **button_padding, sticky="ew")
 
-	btn_Clientes = tk.Button(Menu,text="Clientes",command = inicio_clientes)
-	btn_Clientes.grid(row=3, column=0, padx=5, pady=5, sticky="w")
+	btn_Clientes = tk.Button(Menu, text="Clientes", command=inicio_clientes, font=button_font, width=button_width)
+	btn_Clientes.grid(row=2, column=0, **button_padding, sticky="ew")
 
-	btn_Armar = tk.Button(Menu,text="Venta",command = inicio_armar)
-	btn_Armar.grid(row=4, column=0, padx=5, pady=5, sticky="w")
+	btn_Armar = tk.Button(Menu, text="Venta", command=inicio_armar, font=button_font, width=button_width)
+	btn_Armar.grid(row=3, column=0, **button_padding, sticky="ew")
 
+	btn_Equipos = tk.Button(Menu, text="Equipos", command=inicio_equipos, font=button_font, width=button_width)
+	btn_Equipos.grid(row=4, column=0, **button_padding, sticky="ew")
 
-	btn_Salir = tk.Button(Menu, text = "Salir", command = fin_interfaz)
-	btn_Salir.grid(row=6, column=0, padx=5, pady=5, sticky="w")
+	btn_Salir = tk.Button(Menu, text="Salir", command=fin_interfaz, font=button_font, width=button_width, fg="red")
+	btn_Salir.grid(row=5, column=0, **button_padding, sticky="ew")
