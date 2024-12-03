@@ -454,6 +454,25 @@ def iniciar_equipos():
 		# Insertar los valores en la tabla de equipos si no hay repetición
 		tree_equipo.insert("", "end", values=values)
 
+	def quitar_usuario_a_equipo():
+	    """
+	    Elimina un usuario seleccionado de la tabla de equipos.
+	    """
+	    # Obtener la selección en la tabla de equipos
+	    selected_item = tree_equipo.selection()
+	    if not selected_item:
+	        messagebox.showwarning("Advertencia", "Primero selecciona un usuario del equipo para eliminarlo.")
+	        return  # No hay selección
+
+	    # Confirmar antes de eliminar
+	    confirm = messagebox.askyesno("Confirmación", "¿Estás seguro de que deseas eliminar este usuario del equipo?")
+	    if not confirm:
+	        return  # El usuario canceló la operación
+
+	    # Eliminar el elemento seleccionado
+	    tree_equipo.delete(selected_item)
+	    messagebox.showinfo("Éxito", "El usuario ha sido eliminado del equipo.")
+
 
 	# Panel de botones de acción
 	frame_botones = tk.Frame(Equipos)
@@ -462,6 +481,9 @@ def iniciar_equipos():
 	# Botón para mover el dato
 	boton_agregar = tk.Button(frame_botones, text="Agregar", command=agregar_usuario_a_equipo)
 	boton_agregar.grid(row=0, column=2, padx=5, pady=5, sticky="nsew")
+
+	boton_quitar = tk.Button(frame_botones, text="Quitar", command=quitar_usuario_a_equipo)
+	boton_quitar.grid(row=0, column=3, padx=5, pady=5, sticky="nsew")
 	
 	# Botones del frame_botones
 	btn_guardar = tk.Button(frame_botones, text="Guardar",command = Guardar )

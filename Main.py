@@ -1,4 +1,3 @@
-import interfaz
 import sqlite3
 import Login as log
 
